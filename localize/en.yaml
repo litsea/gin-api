@@ -1,0 +1,121 @@
+# English
+
+## validation
+### https://github.com/go-playground/validator/blob/master/translations/en/en.go
+
+### basic
+
+validation-failed: "{{.field}} validation failed: {{.value}}"
+
+validation-required: "{{.field}} must not be empty"
+validation-required_if: "{{.field}} must not be empty"
+validation-required_unless: "{{.field}} must not be empty"
+validation-required_with: "{{.field}} must not be empty"
+validation-required_with_all: "{{.field}} must not be empty"
+validation-required_without: "{{.field}} must not be empty"
+validation-required_without_all: "{{.field}} must not be empty"
+
+validation-excluded_if: "{{.field}} is an excluded field"
+validation-excluded_unless: "{{.field}} is an excluded field"
+validation-excluded_with: "{{.field}} is an excluded field"
+validation-excluded_with_all: "{{.field}} is an excluded field"
+validation-excluded_without: "{{.field}} is an excluded field"
+validation-excluded_without_all: "{{.field}} is an excluded field"
+
+validation-isdefault: "{{.field}} is a prohibited field"
+
+validation-len-string: "{{.field}} must be {{.value}} characters in length"
+validation-len-number: "{{.field}} must be equal to {{.value}}"
+validation-len-items: "{{.field}} must contain {{.value}} items"
+
+validation-min-string: "{{.field}} must be at least {{.value}} characters in length"
+validation-min-number: "{{.field}} must be {{.value}} or greater"
+validation-min-items: "{{.field}} must contain at least {{.value}} items"
+
+validation-max-string: "{{.field}} must be a maximum of {{.value}} characters in length"
+validation-max-number: "{{.field}} must be {{.value}} or less"
+validation-max-items: "{{.field}} must contain at maximum {{.value}} items"
+
+validation-eq: "{{.field}} is not equal to {{.value}}"
+validation-ne: "{{.field}} should not be equal to {{.value}}"
+
+validation-lt-string: "{{.field}} must be less than {{.value}} characters in length"
+validation-lt-number: "{{.field}} must be less than {{.value}}"
+validation-lt-items: "{{.field}} must contain less than {{.value}} items"
+validation-lt-datetime: "{{.field}} must be less than the current Date & Time"
+
+validation-lte-string: "{{.field}} must be at maximum {{.value}} characters in length"
+validation-lte-number: "{{.field}} must be {{.value}} or less"
+validation-lte-items: "{{.field}} must contain at maximum {{.value}} items"
+validation-lte-datetime: "{{.field}} must less than or equal to the current Date & Time"
+
+validation-gt-string: "{{.field}} must be greater than {{.value}} characters in length"
+validation-gt-number: "{{.field}} must be greater than {{.value}}"
+validation-gt-items: "{{.field}} must contain more than {{.value}} items"
+validation-gt-datetime: "{{.field}} must be greater than the current Date & Time"
+
+validation-gte-string: "{{.field}} must be at least {{.value}} characters in length"
+validation-gte-number: "{{.field}} must be {{.value}} or greater"
+validation-gte-items: "{{.field}} must contain at least {{.value}} items"
+validation-gte-datetime: "{{.field}} must greater than or equal to the current Date & Time"
+
+validation-eqfield: "{{.field}} must be equal to {{.value}}"
+validation-eqcsfield: "{{.field}} must be equal to {{.value}}"
+validation-necsfield: "{{.field}} cannot be equal to {{.value}}"
+validation-gtcsfield: "{{.field}} must be greater than {{.value}}"
+validation-gtecsfield: "{{.field}} must be greater than or equal to {{.value}}"
+validation-ltcsfield: "{{.field}} must be less than {{.value}}"
+validation-ltecsfield: "{{.field}} must be less than or equal to {{.value}}"
+validation-nefield: "{{.field}} cannot be equal to {{.value}}"
+validation-gtfield: "{{.field}} must be greater than {{.value}}"
+validation-gtefield: "{{.field}} must be greater than or equal to {{.value}}"
+validation-ltfield: "{{.field}} must be less than {{.value}}"
+validation-ltefield: "{{.field}} must be less than or equal to {{.value}}"
+
+validation-alpha: "{{.field}} can only contain alphabetic characters"
+validation-alphanum: "{{.field}} can only contain alphanumeric characters"
+validation-numeric: "{{.field}} must be a valid numeric value"
+validation-number: "{{.field}} must be a valid number"
+validation-hexadecimal: "{{.field}} must be a valid hexadecimal"
+validation-hexcolor: "{{.field}} must be a valid HEX color"
+validation-rgb: "{{.field}} must be a valid RGB color"
+validation-rgba: "{{.field}} must be a valid RGBA color"
+
+validation-email: "{{.field}} must be a valid email address"
+validation-url: "{{.field}} must be a valid URL"
+validation-uri: "{{.field}} must be a valid URI"
+validation-base64: "{{.field}} must be a valid Base64 string"
+
+validation-contains: "{{.field}} must contain the text '{{.value}}'"
+validation-containsany: "{{.field}} must contain at least one of the following characters '{{.value}}'"
+validation-excludes: "{{.field}} cannot contain the text '{{.value}}'"
+validation-excludesall: "{{.field}} cannot contain any of the following characters '{{.value}}'"
+validation-excludesrune: "{{.field}} cannot contain the following '{{.value}}'"
+
+validation-json: "{{.field}} must be a valid json string"
+validation-false: "{{.field}} must be a valid jwt string"
+
+validation-oneof: "{{.field}} must be one of [{{.value}}]"
+
+validation-lowercase: "{{.field}} must be a valid boolean value"
+validation-uppercase: "{{.field}} must be a valid boolean value"
+
+validation-datetime: "{{.field}} does not match the {{.value}} format"
+
+validation-boolean: "{{.field}} must be a valid boolean value"
+
+## error
+
+### basic
+
+OK: "OK"
+ErrBadRequest: "Bad Request"
+ErrForbidden: "Forbidden"
+ErrNotFound: "Not Found"
+ErrMethodNotAllowed: "Method Not Allowed"
+ErrTooManyRequests: "Too Many Requests"
+ErrInternalServer: "Internal Server Error"
+
+ErrBadRequestFormat: "Invalid request parameter format"
+ErrBadRequestFormatNumeric: "Invalid numeric format or out of range of request parameter"
+ErrBadRequestFormatTime: "Invalid date time format of request parameter"

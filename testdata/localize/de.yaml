@@ -1,0 +1,6 @@
+validation-required: "{{.field}} darf nicht leer sein"
+
+validation-enum: "{{.field}} muss einer der Werte {{.value}} sein"
+
+ErrBadRequest: "Schlechte Anfrage"
+ErrForbidden: "Verbotene"
