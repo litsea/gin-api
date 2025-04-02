@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/litsea/gin-i18n"
+	i18n "github.com/litsea/gin-i18n"
 )
 
 // E translate error message.

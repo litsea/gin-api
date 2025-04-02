@@ -22,11 +22,26 @@ const (
 )
 
 type Response struct {
-	Code     int           `form:"code"             json:"code"`
-	Message  string        `json:"msg,omitempty"`
+	Code     int           `json:"code"`
+	Message  string        `json:"msg"`
 	Data     any           `json:"data,omitempty"`
 	Errors   []DetailError `json:"errors,omitempty"`
 	httpCode int
+}
+
+type PageResponse struct {
+	Total int64 `json:"total"`           // Total number of records
+	Size  int   `json:"size"`            // Page size
+	Page  int   `json:"page"`            // Current page number
+	Items any   `json:"items,omitempty"` // Data list
+}
+
+type CursorPageResp struct {
+	Total int64 `json:"total"`           // Total number of records
+	Size  int   `json:"size"`            // Page size
+	Start any   `json:"start"`           // Current page cursor start
+	Next  any   `json:"next"`            // Next page cursor start
+	Items any   `json:"items,omitempty"` // Data list
 }
 
 type DetailError struct {
@@ -36,14 +51,43 @@ type DetailError struct {
 	Value   any    `json:"value,omitempty"`
 }
 
-func Success(ctx *gin.Context, data any) {
-	r := Response{
+func NewSuccessResponse(data any) *Response {
+	return &Response{
 		Code:    0,
 		Message: "Success",
 		Data:    data,
 	}
+}
 
-	ctx.JSON(http.StatusOK, r)
+func NewPageResponse(total int64, size, page int, items any) *Response {
+	return NewSuccessResponse(&PageResponse{
+		Total: total,
+		Size:  size,
+		Page:  page,
+		Items: items,
+	})
+}
+
+func NewCursorPageResponse(total int64, size int, start, next, items any) *Response {
+	return NewSuccessResponse(&CursorPageResp{
+		Total: total,
+		Size:  size,
+		Start: start,
+		Next:  next,
+		Items: items,
+	})
+}
+
+func Success(ctx *gin.Context, data any) {
+	ctx.JSON(http.StatusOK, NewSuccessResponse(data))
+}
+
+func PageSuccess(ctx *gin.Context, total int64, size, page int, items any) {
+	ctx.JSON(http.StatusOK, NewPageResponse(total, size, page, items))
+}
+
+func CursorPageSuccess(ctx *gin.Context, total int64, size int, start, next, items any) {
+	ctx.JSON(http.StatusOK, NewCursorPageResponse(total, size, start, next, items))
 }
 
 func Error(ctx *gin.Context, err error) {
