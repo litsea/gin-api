@@ -1,5 +1,31 @@
 # gin-api
 
+## CORS
+
+```golang
+import (
+	"github.com/litsea/gin-api/cors"
+)
+
+r := gin.New()
+
+r.Use(cors.New(
+	cors.WithAllowOrigin([]string{"https://foo.com", "https://*.foo.com"}),
+))
+```
+
+### Config
+
+* Default:
+  * [cors.New()](cors/middleware.go)
+* Custom: [cors.Option](cors/option.go)
+  * `WithAllowMethods()`
+  * `WithAllowHeaders()`
+  * `WithAllowOrigin()`
+  * `WithAllowWildcard()`
+  * `WithAllowCredentials()`
+  * `WithMaxAge()`
+
 ## Error Code
 
 ```golang
