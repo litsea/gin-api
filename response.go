@@ -12,14 +12,17 @@ import (
 	"github.com/cdfmlr/ellipsis"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+
 	"github.com/litsea/gin-api/errcode"
 	"github.com/litsea/gin-api/i18n"
-	"github.com/litsea/gin-api/logger"
+	"github.com/litsea/gin-api/log"
 )
 
 const (
 	maxValidationErrorValueLength = 50
 )
+
+var errInvokeErrorFuncWithoutError = errors.New("invoke error function without error")
 
 type Response struct {
 	Code     int           `json:"code"`
@@ -91,6 +94,9 @@ func CursorPageSuccess(ctx *gin.Context, total int64, size int, start, next, ite
 }
 
 func Error(ctx *gin.Context, err error) {
+	l := log.GetLoggerFromContext(ctx)
+	logFn := l.GetAddAttributesFunc()
+
 	httpCode := http.StatusInternalServerError
 	code := httpCode
 
@@ -111,12 +117,18 @@ func Error(ctx *gin.Context, err error) {
 
 		switch ee.HTTPCode() {
 		case http.StatusBadRequest:
-			logger.Debug("HTTP bad request", "err", err)
+			l.Debug("HTTP bad request", "err", err)
 		case http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound,
 			http.StatusMethodNotAllowed, http.StatusTooManyRequests:
 			// ignore log
 		default:
-			logger.Error("HTTP common error", "err", err)
+			msgErr := fmt.Sprintf("API error: code=%d %s", code, ee.Error())
+			if logFn == nil {
+				l.Error(msgErr, "err", err)
+			} else {
+				_ = ctx.Error(fmt.Errorf("%s", msgErr))
+				logFn(ctx, "err", err)
+			}
 		}
 	case errors.As(err, &ve):
 		validateError(ctx, ve)
@@ -125,11 +137,29 @@ func Error(ctx *gin.Context, err error) {
 	default:
 		if ctx.Writer.Status() != http.StatusOK {
 			httpCode = ctx.Writer.Status()
-			code = ctx.Writer.Status()
+			code = httpCode
 		}
 
-		message = err.Error()
-		logger.Error("HTTP error", "err", err)
+		// Do not send unknown error messages to the frontend
+		message = i18n.E(ctx, errcode.ErrInternalServer.Error())
+
+		if err != nil {
+			msgErr := fmt.Sprintf("HTTP error: code=%d %s", code, http.StatusText(code))
+			if logFn == nil {
+				l.Error(msgErr, "err", err)
+			} else {
+				_ = ctx.Error(fmt.Errorf("%s", msgErr))
+				logFn(ctx, "err", err)
+			}
+		} else {
+			msgErr := "Incorrect error function invoke"
+			if logFn == nil {
+				l.Error(msgErr, "err", errInvokeErrorFuncWithoutError)
+			} else {
+				_ = ctx.Error(fmt.Errorf("%s", msgErr))
+				logFn(ctx, "err", errInvokeErrorFuncWithoutError)
+			}
+		}
 	}
 
 	ctx.JSON(httpCode, Response{
@@ -141,7 +171,9 @@ func Error(ctx *gin.Context, err error) {
 
 // VError response validate errors.
 func VError(ctx *gin.Context, err error, req any) {
-	logger.Debug("Failed to validate request data", "err", err, "req", req)
+	l := log.GetLoggerFromContext(ctx)
+
+	l.Debug("Failed to validate request data", "err", err, "req", req)
 
 	var ve validator.ValidationErrors
 

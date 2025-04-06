@@ -130,7 +130,9 @@ func TestCORS(t *testing.T) {
 }
 
 func newServer(origins []string) *gin.Engine {
-	gin.SetMode(gin.ReleaseMode)
+	// TODO: data race warning for gin mode
+	// https://github.com/gin-gonic/gin/pull/1580 (not yet released)
+	// gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 
 	r.Use(New(
@@ -149,7 +151,7 @@ func makeRequest(method, origin string, origins []string) (int, string) {
 		method = "GET"
 	}
 
-	req, _ := http.NewRequestWithContext(context.Background(), method, "/", nil)
+	req, _ := http.NewRequestWithContext(context.Background(), method, "/", http.NoBody)
 	req.Header.Add("Origin", origin)
 
 	w := httptest.NewRecorder()

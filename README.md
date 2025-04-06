@@ -57,10 +57,8 @@ ErrLongMsg: >-
   long long error message
 ```
 
-> * See:
->   * https://github.com/litsea/gin-i18n
->   * https://github.com/litsea/i18n
-> * Built-in localize folder: [localize/](localize/)
+> * See: https://github.com/litsea/gin-i18n
+> * Built-in localize folder: [localize](localize)
 > * Embedded translations: [api.Localize](api.go),
 
 ## HTTP Response
@@ -96,7 +94,57 @@ r.GET("/validation/required", func(ctx *gin.Context) {
 
 ## Logger and Error Wrapping
 
-Logging is disabled by default, in order to log API errors, you need to implement [logger.Logger](logger/logger.go) and specify the log handler using `logger.SetLogger()`
+### Logger
+
+```golang
+import (
+	"log/slog"
+	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/litsea/gin-api/log"
+)
+
+r := gin.New()
+
+l := log.New(
+	slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})),
+)
+r.Use(log.Middleware(l))
+```
+
+You can use [AddAttributesFunc](log/log.go) to have other gin logging middlewares handle the error logging.
+
+Example for [slog-gin](https://github.com/samber/slog-gin)
+
+```golang
+import (
+	"log/slog"
+	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/litsea/gin-api/log"
+	ginslog "github.com/litsea/gin-slog"
+	sloggin "github.com/samber/slog-gin"
+)
+
+r := gin.New()
+
+l := log.New(
+	slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})),
+	ginslog.AddCustomAttributes,
+)
+r.Use(log.Middleware(l))
+```
+
+See:
+
+* https://github.com/litsea/gin-slog
+* https://github.com/litsea/sentry
+* https://github.com/litsea/log
+* https://github.com/litsea/gin-example
+
+### Error Wrapping
 
 Errors returned to the frontend do not need to be logged repeatedly, use `fmt.Errorf()` to wrap the error and log the details. When the error type of the outer wrapper is [errcode.Error](errcode/errcode.go), the front end will only receive the translated message of this error code, and the logger will record all the error contexts.
 
