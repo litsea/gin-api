@@ -1,1 +1,3 @@
 validation-enum: "{{.field}} must be one of the values {{.value}}"
+
+errCustom503: "Customized service not available"

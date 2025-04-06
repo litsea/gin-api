@@ -4,3 +4,5 @@ validation-enum: "{{.field}} muss einer der Werte {{.value}} sein"
 
 ErrBadRequest: "Schlechte Anfrage"
 ErrForbidden: "Verbotene"
+ErrInternalServer: "Interner Server Fehler"
+errCustom503: "Benutzerdefinierter Service nicht verfügbar"
