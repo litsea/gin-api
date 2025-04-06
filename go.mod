@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/cdfmlr/ellipsis v0.0.1
-	github.com/gin-contrib/cors v1.7.4
+	github.com/gin-contrib/cors v1.7.5
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/litsea/gin-i18n v0.2.0
