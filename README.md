@@ -140,7 +140,7 @@ r.Use(log.Middleware(l))
 See:
 
 * https://github.com/litsea/gin-slog
-* https://github.com/litsea/sentry
+* https://github.com/litsea/sentry-slog
 * https://github.com/litsea/log-slog
 * https://github.com/litsea/gin-example
 
