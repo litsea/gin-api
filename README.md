@@ -109,37 +109,29 @@ r := gin.New()
 
 l := log.New(
 	slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})),
+	log.WithRequestIDHeaderKey("X-Request-ID"),
+	log.WithRequestHeader(true),
+	log.WithRequestBody(true),
+	log.WithUserAgent(true),
+	log.WithStackTrace(true),
+	log.WithExtraAttrs(map[string]any{ ... }),
 )
 r.Use(log.Middleware(l))
 ```
 
-You can use [AddAttributesFunc](log/log.go) to have other gin logging middlewares handle the error logging.
+Default config: [log.New()](log/log.go)
 
-Example for [slog-gin](https://github.com/samber/slog-gin)
+Logging with gin request context:
 
 ```golang
-import (
-	"log/slog"
-	"os"
-
-	"github.com/gin-gonic/gin"
-	"github.com/litsea/gin-api/log"
-	ginslog "github.com/litsea/gin-slog"
-	sloggin "github.com/samber/slog-gin"
-)
-
-r := gin.New()
-
-l := log.New(
-	slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})),
-	ginslog.AddCustomAttributes,
-)
-r.Use(log.Middleware(l))
+l.ErrorRequest(ctx, msgErr, map[string]any{
+	"status": httpCode,
+	"err":    err,
+})
 ```
 
-See:
+See also:
 
-* https://github.com/litsea/gin-slog
 * https://github.com/litsea/sentry-slog
 * https://github.com/litsea/log-slog
 * https://github.com/litsea/gin-example
@@ -182,3 +174,18 @@ if err != nil {
 
 > * The frontend will only get the translated error message of `errcode.ErrLoginCheckFailed`
 > * The log message can be `service.Login: ErrLoginCheckFailed, username=abc, model.LoginCheck: dial tcp 10.0.0.1:3306: connect: connection refused`
+
+### Panic Recovery
+
+```golang
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/litsea/gin-api"
+)
+
+r := gin.New()
+
+r.Use(
+	api.Recovery(api.HandleRecovery()),
+)
+```

@@ -387,7 +387,6 @@ func TestLoggerInResponse(t *testing.T) {
 	type args struct {
 		uri string
 		lv  slog.Level
-		fn  []log.AddAttributesFunc
 	}
 
 	tests := []struct {
@@ -466,7 +465,7 @@ func TestLoggerInResponse(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := makeRequestForLogger(tt.args.uri, tt.args.lv, tt.args.fn...)
+			got := makeRequestForLogger(tt.args.uri, tt.args.lv)
 			if len(tt.want) == 0 {
 				assert.Equal(t, "", got)
 			} else {
@@ -478,14 +477,14 @@ func TestLoggerInResponse(t *testing.T) {
 	}
 }
 
-func makeRequestForLogger(uri string, lv slog.Level, fn ...log.AddAttributesFunc) string {
+func makeRequestForLogger(uri string, lv slog.Level) string {
 	req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, uri, http.NoBody)
 
 	buffer := new(strings.Builder)
 	defer buffer.Reset()
 
 	l := log.New(
-		slog.New(slog.NewTextHandler(buffer, &slog.HandlerOptions{Level: lv})), fn...,
+		slog.New(slog.NewTextHandler(buffer, &slog.HandlerOptions{Level: lv})),
 	)
 
 	w := httptest.NewRecorder()
