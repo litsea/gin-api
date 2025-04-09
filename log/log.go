@@ -41,7 +41,7 @@ type Logger interface {
 	InfoRequest(ctx *gin.Context, msg string, attrs map[string]any)
 	WarnRequest(ctx *gin.Context, msg string, attrs map[string]any)
 	ErrorRequest(ctx *gin.Context, msg string, attrs map[string]any)
-	GetRequestIDKey() string
+	Config() *Config
 }
 
 type Config struct {
@@ -83,8 +83,8 @@ func New(sl *slog.Logger, opts ...Option) *DefaultLogger {
 	return l
 }
 
-func (l *DefaultLogger) GetRequestIDKey() string {
-	return l.cfg.requestIDHeaderKey
+func (l *DefaultLogger) Config() *Config {
+	return l.cfg
 }
 
 func (l *DefaultLogger) Debug(msg string, args ...any) {
@@ -188,14 +188,11 @@ func (l *DefaultLogger) logRequest(ctx *gin.Context, lv slog.Level, msg string, 
 		requestAttributes = append(requestAttributes, slog.Group("header", kv...))
 	}
 
-	// dump request body
-	br := newBodyReader(ctx.Request.Body, RequestBodyMaxSize, l.cfg.withRequestBody)
-	ctx.Request.Body = br
-
 	// request body
-	requestAttributes = append(requestAttributes, slog.Int("length", br.bytes))
 	if l.cfg.withRequestBody {
-		requestAttributes = append(requestAttributes, slog.String("body", br.body.String()))
+		body, n := GetRequestBody(ctx)
+		requestAttributes = append(requestAttributes, slog.Int("length", n))
+		requestAttributes = append(requestAttributes, slog.String("body", body.String()))
 	}
 
 	attributes := []slog.Attr{
