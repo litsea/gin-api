@@ -1,6 +1,9 @@
 package log
 
 import (
+	"bytes"
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -8,6 +11,7 @@ import (
 const (
 	customLoggerContextKey    = "litsea.gin-api.log"
 	requestIDCtxKey           = "litsea.gin-api.log.request-id"
+	requestBodyCtxKey         = "litsea.gin-api.log.request-body"
 	defaultRequestIDHeaderKey = "X-Request-ID"
 )
 
@@ -17,11 +21,21 @@ func Middleware(l Logger) gin.HandlerFunc {
 			SetLoggerToContext(c, l)
 		}
 
-		if l.GetRequestIDKey() != "" {
-			requestID := c.GetHeader(l.GetRequestIDKey())
+		if l.Config().withRequestBody {
+			rb := newRequestBody(RequestBodyMaxSize, l.Config().withRequestBody)
+			err := rb.read(c)
+			if err != nil {
+				l.Error("log.Middleware: read requestBody failed", "err", fmt.Errorf("%w", err))
+			} else {
+				c.Set(requestBodyCtxKey, rb)
+			}
+		}
+
+		if l.Config().requestIDHeaderKey != "" {
+			requestID := c.GetHeader(l.Config().requestIDHeaderKey)
 			if requestID == "" {
 				requestID = uuid.New().String()
-				c.Header(l.GetRequestIDKey(), requestID)
+				c.Header(l.Config().requestIDHeaderKey, requestID)
 			}
 			c.Set(requestIDCtxKey, requestID)
 		}
@@ -62,4 +76,20 @@ func GetRequestID(ctx *gin.Context) string {
 	}
 
 	return ""
+}
+
+func GetRequestBody(ctx *gin.Context) (*bytes.Buffer, int) {
+	body, ok := ctx.Get(requestBodyCtxKey)
+	if !ok {
+		return bytes.NewBuffer([]byte{}), 0
+	}
+
+	if rb, ok := body.(*requestBody); ok {
+		if rb.body == nil {
+			return bytes.NewBuffer([]byte{}), 0
+		}
+		return rb.body, rb.bytes
+	}
+
+	return bytes.NewBuffer([]byte{}), 0
 }
