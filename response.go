@@ -95,7 +95,6 @@ func CursorPageSuccess(ctx *gin.Context, total int64, size int, start, next, ite
 
 func Error(ctx *gin.Context, err error) {
 	l := log.GetLoggerFromContext(ctx)
-	logFn := l.GetAddAttributesFunc()
 
 	httpCode := http.StatusInternalServerError
 	code := httpCode
@@ -123,12 +122,10 @@ func Error(ctx *gin.Context, err error) {
 			// ignore log
 		default:
 			msgErr := fmt.Sprintf("API error: code=%d %s", code, ee.Error())
-			if logFn == nil {
-				l.Error(msgErr, "err", err)
-			} else {
-				_ = ctx.Error(fmt.Errorf("%s", msgErr))
-				logFn(ctx, "err", err)
-			}
+			l.ErrorRequest(ctx, msgErr, map[string]any{
+				"status": httpCode,
+				"err":    err,
+			})
 		}
 	case errors.As(err, &ve):
 		validateError(ctx, ve)
@@ -143,23 +140,22 @@ func Error(ctx *gin.Context, err error) {
 		// Do not send unknown error messages to the frontend
 		message = i18n.E(ctx, errcode.ErrInternalServer.Error())
 
+		var (
+			msgErr string
+			rErr   error
+		)
 		if err != nil {
-			msgErr := fmt.Sprintf("HTTP error: code=%d %s", code, http.StatusText(code))
-			if logFn == nil {
-				l.Error(msgErr, "err", err)
-			} else {
-				_ = ctx.Error(fmt.Errorf("%s", msgErr))
-				logFn(ctx, "err", err)
-			}
+			msgErr = fmt.Sprintf("HTTP error: code=%d %s", code, http.StatusText(code))
+			rErr = err
 		} else {
-			msgErr := "Incorrect error function invoke"
-			if logFn == nil {
-				l.Error(msgErr, "err", errInvokeErrorFuncWithoutError)
-			} else {
-				_ = ctx.Error(fmt.Errorf("%s", msgErr))
-				logFn(ctx, "err", errInvokeErrorFuncWithoutError)
-			}
+			msgErr = "Incorrect error function invoke"
+			rErr = errInvokeErrorFuncWithoutError
 		}
+
+		l.ErrorRequest(ctx, msgErr, map[string]any{
+			"status": httpCode,
+			"err":    rErr,
+		})
 	}
 
 	ctx.JSON(httpCode, Response{
@@ -173,7 +169,12 @@ func Error(ctx *gin.Context, err error) {
 func VError(ctx *gin.Context, err error, req any) {
 	l := log.GetLoggerFromContext(ctx)
 
-	l.Debug("Failed to validate request data", "err", err, "req", req)
+	params := map[string]string{}
+	for _, p := range ctx.Params {
+		params[p.Key] = p.Value
+	}
+
+	l.Debug("Failed to validate request data", "err", err, "params", params)
 
 	var ve validator.ValidationErrors
 

@@ -1,101 +1,257 @@
 package log
 
 import (
+	"context"
 	"log/slog"
+	"runtime/debug"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-const (
-	customLoggerContextKey = "litsea.gin-api.logger"
+var (
+	RequestIDKey = "id"
+
+	RequestBodyMaxSize = 64 * 1024 // 64KB
+
+	HiddenRequestHeaders = map[string]struct{}{
+		"authorization": {},
+		"cookie":        {},
+		"set-cookie":    {},
+		"x-auth-token":  {},
+		"x-csrf-token":  {},
+		"x-xsrf-token":  {},
+	}
+
+	// RequestIDHeaderKey Formatted with http.CanonicalHeaderKey
+
+	defaultLogExtraAttrs = map[string]any{
+		"log.handler": "litsea.gin-api.log",
+	}
 )
 
 var _ Logger = (*DefaultLogger)(nil)
-
-// AddAttributesFunc functions for add log attrs to gin context.
-// When this function is specified,
-// the error log will be passed to the middleware for processing.
-type AddAttributesFunc func(c *gin.Context, key string, value any)
 
 type Logger interface {
 	Debug(msg string, args ...any)
 	Info(msg string, args ...any)
 	Warn(msg string, args ...any)
 	Error(msg string, args ...any)
-	GetAddAttributesFunc() AddAttributesFunc
+	DebugRequest(ctx *gin.Context, msg string, attrs map[string]any)
+	InfoRequest(ctx *gin.Context, msg string, attrs map[string]any)
+	WarnRequest(ctx *gin.Context, msg string, attrs map[string]any)
+	ErrorRequest(ctx *gin.Context, msg string, attrs map[string]any)
+	GetRequestIDKey() string
+}
+
+type Config struct {
+	withUserAgent      bool
+	withRequestBody    bool
+	withRequestHeader  bool
+	withStackTrace     bool
+	requestIDHeaderKey string
+	extraAttrs         map[string]any
 }
 
 type DefaultLogger struct {
 	enable bool
-	log    *slog.Logger
-	fn     AddAttributesFunc
+	sl     *slog.Logger
+	cfg    *Config
 }
 
-func New(sl *slog.Logger, fn ...AddAttributesFunc) *DefaultLogger {
+func New(sl *slog.Logger, opts ...Option) *DefaultLogger {
 	l := &DefaultLogger{
 		enable: true,
-		log:    sl,
+		sl:     sl,
 	}
-	if len(fn) > 0 {
-		l.fn = fn[0]
+
+	cfg := &Config{
+		withUserAgent:      false,
+		withRequestBody:    false,
+		withRequestHeader:  false,
+		withStackTrace:     false,
+		requestIDHeaderKey: defaultRequestIDHeaderKey,
+		extraAttrs:         defaultLogExtraAttrs,
 	}
+
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	l.cfg = cfg
 
 	return l
 }
 
-// GetLoggerFromContext get logger context set by SetLoggerToContext()
-//
-//nolint:ireturn
-func GetLoggerFromContext(ctx *gin.Context) Logger {
-	v, exists := ctx.Get(customLoggerContextKey)
-	if !exists {
-		return &DefaultLogger{}
-	}
-
-	l, ok := v.(Logger)
-	if !ok {
-		return &DefaultLogger{}
-	}
-
-	return l
-}
-
-func SetLoggerToContext(ctx *gin.Context, l Logger) {
-	ctx.Set(customLoggerContextKey, l)
+func (l *DefaultLogger) GetRequestIDKey() string {
+	return l.cfg.requestIDHeaderKey
 }
 
 func (l *DefaultLogger) Debug(msg string, args ...any) {
-	if !l.enable {
-		return
-	}
-
-	l.log.Debug(msg, args...)
+	l.logContext(context.Background(), slog.LevelDebug, msg, args...)
 }
 
 func (l *DefaultLogger) Info(msg string, args ...any) {
-	if !l.enable {
-		return
-	}
-
-	l.log.Info(msg, args...)
+	l.logContext(context.Background(), slog.LevelInfo, msg, args...)
 }
 
 func (l *DefaultLogger) Warn(msg string, args ...any) {
-	if !l.enable {
-		return
-	}
-
-	l.log.Warn(msg, args...)
+	l.logContext(context.Background(), slog.LevelWarn, msg, args...)
 }
 
 func (l *DefaultLogger) Error(msg string, args ...any) {
+	l.logContext(context.Background(), slog.LevelError, msg, args...)
+}
+
+func (l *DefaultLogger) logContext(ctx context.Context, lv slog.Level, msg string, args ...any) {
 	if !l.enable {
 		return
 	}
 
-	l.log.Error(msg, args...)
+	l.sl.Log(ctx, lv, msg, args...)
 }
 
-func (l *DefaultLogger) GetAddAttributesFunc() AddAttributesFunc {
-	return l.fn
+func (l *DefaultLogger) DebugRequest(ctx *gin.Context, msg string, attrs map[string]any) {
+	l.logRequest(ctx, slog.LevelDebug, msg, attrs)
+}
+
+func (l *DefaultLogger) InfoRequest(ctx *gin.Context, msg string, attrs map[string]any) {
+	l.logRequest(ctx, slog.LevelInfo, msg, attrs)
+}
+
+func (l *DefaultLogger) WarnRequest(ctx *gin.Context, msg string, attrs map[string]any) {
+	l.logRequest(ctx, slog.LevelWarn, msg, attrs)
+}
+
+func (l *DefaultLogger) ErrorRequest(ctx *gin.Context, msg string, attrs map[string]any) {
+	l.logRequest(ctx, slog.LevelError, msg, attrs)
+}
+
+func (l *DefaultLogger) logRequest(ctx *gin.Context, lv slog.Level, msg string, args map[string]any) {
+	if !l.enable {
+		return
+	}
+
+	if !l.sl.Enabled(ctx, lv) {
+		return
+	}
+
+	method := ctx.Request.Method
+	host := ctx.Request.Host
+	path := ctx.Request.URL.Path
+
+	var status int
+	st, ok := args["status"]
+	if ok {
+		if sts, ok := st.(int); ok {
+			status = sts
+		}
+	}
+
+	params := map[string]string{}
+	for _, p := range ctx.Params {
+		params[p.Key] = p.Value
+	}
+
+	requestAttributes := []slog.Attr{
+		slog.String("method", method),
+		slog.String("host", host),
+		slog.String("path", path),
+		slog.String("query", ctx.Request.URL.RawQuery),
+		slog.Any("params", params),
+		slog.String("route", ctx.FullPath()),
+		slog.String("ip", ctx.ClientIP()),
+		slog.String("referer", ctx.Request.Referer()),
+	}
+
+	if l.cfg.withUserAgent {
+		requestAttributes = append(requestAttributes, slog.String("user-agent",
+			ctx.Request.UserAgent()))
+	}
+
+	requestID := GetRequestID(ctx)
+	if l.cfg.requestIDHeaderKey != "" && requestID != "" {
+		requestAttributes = append(requestAttributes, slog.String(RequestIDKey, requestID))
+	}
+
+	// request headers
+	if l.cfg.withRequestHeader {
+		kv := make([]any, 0, len(ctx.Request.Header))
+
+		for k, v := range ctx.Request.Header {
+			if _, found := HiddenRequestHeaders[strings.ToLower(k)]; found {
+				continue
+			}
+			kv = append(kv, slog.Any(k, v))
+		}
+
+		requestAttributes = append(requestAttributes, slog.Group("header", kv...))
+	}
+
+	// dump request body
+	br := newBodyReader(ctx.Request.Body, RequestBodyMaxSize, l.cfg.withRequestBody)
+	ctx.Request.Body = br
+
+	// request body
+	requestAttributes = append(requestAttributes, slog.Int("length", br.bytes))
+	if l.cfg.withRequestBody {
+		requestAttributes = append(requestAttributes, slog.String("body", br.body.String()))
+	}
+
+	attributes := []slog.Attr{
+		{
+			Key:   "request",
+			Value: slog.GroupValue(requestAttributes...),
+		},
+	}
+
+	if status > 0 {
+		responseAttributes := []slog.Attr{
+			slog.Int("status", status),
+		}
+
+		attributes = append(attributes, slog.Attr{
+			Key:   "response",
+			Value: slog.GroupValue(responseAttributes...),
+		})
+	}
+
+	// custom context values
+	for k, v := range l.cfg.extraAttrs {
+		attributes = append(attributes, slog.Any(k, v))
+	}
+
+	for k, v := range args {
+		if k == "status" {
+			continue
+		}
+		attributes = append(attributes, slog.Any(k, v))
+	}
+
+	if l.cfg.withStackTrace {
+		trace := debug.Stack()
+		attributes = append(attributes, slog.Any("stacktrace", string(trace)))
+	}
+
+	l.sl.LogAttrs(ctx, lv, msg, attributes...)
+}
+
+func DebugRequest(ctx *gin.Context, msg string, attrs map[string]any) {
+	l := GetLoggerFromContext(ctx)
+	l.DebugRequest(ctx, msg, attrs)
+}
+
+func InfoRequest(ctx *gin.Context, msg string, attrs map[string]any) {
+	l := GetLoggerFromContext(ctx)
+	l.InfoRequest(ctx, msg, attrs)
+}
+
+func WarnRequest(ctx *gin.Context, msg string, attrs map[string]any) {
+	l := GetLoggerFromContext(ctx)
+	l.WarnRequest(ctx, msg, attrs)
+}
+
+func ErrorRequest(ctx *gin.Context, msg string, attrs map[string]any) {
+	l := GetLoggerFromContext(ctx)
+	l.ErrorRequest(ctx, msg, attrs)
 }
