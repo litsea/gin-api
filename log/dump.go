@@ -11,7 +11,6 @@ import (
 )
 
 type requestBody struct {
-	io.ReadCloser
 	body    *bytes.Buffer
 	maxSize int
 	bytes   int
