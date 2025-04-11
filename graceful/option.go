@@ -49,6 +49,8 @@ func WithCleanup(cleanup ...cleanup) Option {
 
 func WithLogger(l log.Logger) Option {
 	return func(c *Graceful) {
-		c.l = l
+		if l != nil {
+			c.l = l
+		}
 	}
 }

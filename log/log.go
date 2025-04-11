@@ -60,6 +60,10 @@ type DefaultLogger struct {
 }
 
 func New(sl *slog.Logger, opts ...Option) *DefaultLogger {
+	if sl == nil {
+		return NewDisabled()
+	}
+
 	l := &DefaultLogger{
 		enable: true,
 		sl:     sl,
@@ -81,6 +85,12 @@ func New(sl *slog.Logger, opts ...Option) *DefaultLogger {
 	l.cfg = cfg
 
 	return l
+}
+
+func NewDisabled() *DefaultLogger {
+	return &DefaultLogger{
+		cfg: &Config{},
+	}
 }
 
 func (l *DefaultLogger) Config() *Config {
