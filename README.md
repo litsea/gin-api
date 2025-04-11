@@ -189,3 +189,62 @@ r.Use(
 	api.Recovery(api.HandleRecovery()),
 )
 ```
+
+## Graceful Shutdown
+
+```golang
+import (
+	"fmt"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/litsea/gin-api/graceful"
+	apilog "github.com/litsea/gin-api/log"
+	log "github.com/litsea/log-slog"
+)
+
+l := apilog.New( ... )
+r := gin.New()
+
+g := graceful.New(
+	r,
+	graceful.WithAddr(
+		fmt.Sprintf("%s:%d", "0.0.0.0", 8080),
+	),
+	graceful.WithReadTimeout(15*time.Second),
+	graceful.WithWriteTimeout(15*time.Second),
+	graceful.WithLogger(l),
+	graceful.WithCleanup(func() {
+		log.Info("gracefulRunServer: test cleanup...")
+		time.Sleep(5 * time.Second)
+	}),
+)
+
+g.Run()
+// Wait for send event to Sentry when server start failed
+time.Sleep(3 * time.Second)
+```
+
+## Rate Limit
+
+```golang
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/litsea/gin-api/ratelimit"
+)
+
+// Max 10 requests in one minute
+var ipLimiter = ratelimit.NewLimiter(10, time.Minute)
+
+r := gin.New()
+
+r.GET("/rate-limit", ipLimiter.Middleware(), func(ctx *gin.Context) {
+	// ...
+})
+```
+
+### Rate Limit Response Header
+
+* `X-RateLimit-Limit`: Limit requests
+* `X-RateLimit-Remaining`: Remaining requests
+* `X-RateLimit-Reset`: Limit reset seconds
