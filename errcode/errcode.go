@@ -37,13 +37,14 @@ func (e *Error) Error() string {
 var (
 	// basic.
 
-	OK                  = New(CodeOK, "OK", http.StatusOK)
-	ErrBadRequest       = New(http.StatusBadRequest, "ErrBadRequest", http.StatusBadRequest)
-	ErrForbidden        = New(http.StatusForbidden, "ErrForbidden", http.StatusForbidden)
-	ErrNotFound         = New(http.StatusNotFound, "ErrNotFound", http.StatusNotFound)
-	ErrMethodNotAllowed = New(http.StatusMethodNotAllowed, "ErrMethodNotAllowed", http.StatusMethodNotAllowed)
-	ErrTooManyRequests  = New(http.StatusTooManyRequests, "ErrTooManyRequests", http.StatusTooManyRequests)
-	ErrInternalServer   = New(http.StatusInternalServerError, "ErrInternalServer")
+	OK                    = New(CodeOK, "OK", http.StatusOK)
+	ErrBadRequest         = New(http.StatusBadRequest, "ErrBadRequest", http.StatusBadRequest)
+	ErrForbidden          = New(http.StatusForbidden, "ErrForbidden", http.StatusForbidden)
+	ErrNotFound           = New(http.StatusNotFound, "ErrNotFound", http.StatusNotFound)
+	ErrMethodNotAllowed   = New(http.StatusMethodNotAllowed, "ErrMethodNotAllowed", http.StatusMethodNotAllowed)
+	ErrTooManyRequests    = New(http.StatusTooManyRequests, "ErrTooManyRequests", http.StatusTooManyRequests)
+	ErrInternalServer     = New(http.StatusInternalServerError, "ErrInternalServer")
+	ErrServiceUnavailable = New(http.StatusServiceUnavailable, "ErrServiceUnavailable", http.StatusServiceUnavailable)
 
 	// req bad request.
 
