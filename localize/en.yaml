@@ -115,6 +115,7 @@ ErrNotFound: "Not Found"
 ErrMethodNotAllowed: "Method Not Allowed"
 ErrTooManyRequests: "Too Many Requests"
 ErrInternalServer: "Internal Server Error"
+ErrServiceUnavailable: "Service Unavailable"
 
 ErrBadRequestFormat: "Invalid request parameter format"
 ErrBadRequestFormatNumeric: "Invalid numeric format or out of range of request parameter"
