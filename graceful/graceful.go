@@ -35,7 +35,7 @@ type cleanup func()
 func New(r *gin.Engine, opts ...Option) *Graceful {
 	g := &Graceful{
 		router:              r,
-		l:                   &log.DefaultLogger{}, // default disabled
+		l:                   log.NewDisabled(), // default disabled
 		addr:                ":8080",
 		readTimeout:         defaultReadTimeout,
 		writeTimeout:        defaultWriteTimeout,
