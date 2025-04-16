@@ -52,4 +52,8 @@ var (
 	ErrBadRequestFormatNumeric = New(1002, "ErrBadRequestFormatNumeric", http.StatusBadRequest)
 	ErrBadRequestFormatTime    = New(1003, "ErrBadRequestFormatTime", http.StatusBadRequest)
 	ErrBadRequestFormatJSON    = New(1004, "ErrBadRequestFormatJSON", http.StatusBadRequest)
+
+	// server common error.
+
+	ErrServiceTimeout = New(1101, "ErrServiceTimeout", http.StatusServiceUnavailable)
 )
