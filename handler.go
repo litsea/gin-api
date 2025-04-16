@@ -27,12 +27,19 @@ func HandleHealthCheck() gin.HandlerFunc {
 	}
 }
 
-func RouteRegisterPprof(r *gin.Engine, token string) {
-	if token == "" {
+func RouteRegisterPprof(r *gin.Engine, getTokenFn func() string) {
+	if getTokenFn == nil {
 		return
 	}
 
 	g := r.Group("/debug", func(ctx *gin.Context) {
+		token := getTokenFn()
+		if token == "" {
+			Error(ctx, errcode.ErrNotFound)
+			ctx.Abort()
+			return
+		}
+
 		req := &struct {
 			Token string `form:"token"`
 		}{}
@@ -40,6 +47,7 @@ func RouteRegisterPprof(r *gin.Engine, token string) {
 		if err != nil || req.Token != token {
 			Error(ctx, errcode.ErrForbidden)
 			ctx.Abort()
+			return
 		}
 		ctx.Next()
 	})

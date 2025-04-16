@@ -120,3 +120,5 @@ ErrServiceUnavailable: "Service Unavailable"
 ErrBadRequestFormat: "Invalid request parameter format"
 ErrBadRequestFormatNumeric: "Invalid numeric format or out of range of request parameter"
 ErrBadRequestFormatTime: "Invalid date time format of request parameter"
+
+ErrServiceTimeout: "Service Timeout"
