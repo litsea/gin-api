@@ -14,32 +14,32 @@ import (
 )
 
 const (
-	defaultReadTimeout         = 15 * time.Second
-	defaultWriteTimeout        = 15 * time.Second
-	defaultMaxShutdownDuration = 30 * time.Second
+	defaultReadTimeout  = 15 * time.Second
+	defaultWriteTimeout = 15 * time.Second
+	defaultStopTimeout  = 30 * time.Second
 )
 
 type Graceful struct {
-	router              *gin.Engine
-	server              *http.Server
-	l                   log.Logger
-	addr                string
-	readTimeout         time.Duration
-	writeTimeout        time.Duration
-	maxShutdownDuration time.Duration
-	cleanup             []cleanup
+	router       *gin.Engine
+	server       *http.Server
+	l            log.Logger
+	addr         string
+	readTimeout  time.Duration
+	writeTimeout time.Duration
+	stopTimeout  time.Duration
+	cleanup      []cleanup
 }
 
 type cleanup func()
 
 func New(r *gin.Engine, opts ...Option) *Graceful {
 	g := &Graceful{
-		router:              r,
-		l:                   log.NewDisabled(), // default disabled
-		addr:                ":8080",
-		readTimeout:         defaultReadTimeout,
-		writeTimeout:        defaultWriteTimeout,
-		maxShutdownDuration: defaultMaxShutdownDuration,
+		router:       r,
+		l:            log.NewDisabled(), // default disabled
+		addr:         ":8080",
+		readTimeout:  defaultReadTimeout,
+		writeTimeout: defaultWriteTimeout,
+		stopTimeout:  defaultStopTimeout,
 	}
 
 	for _, opt := range opts {
@@ -54,6 +54,8 @@ func New(r *gin.Engine, opts ...Option) *Graceful {
 			WriteTimeout:      g.writeTimeout,
 			ReadHeaderTimeout: time.Second * 5, // Set a reasonable ReadHeaderTimeout value
 		}
+	} else if g.server.Handler == nil {
+		g.server.Handler = g.router
 	}
 
 	return g
@@ -66,7 +68,7 @@ func (g *Graceful) Run() {
 
 	go func() {
 		// serve connections
-		g.l.Info("graceful.Run: server start running...")
+		g.l.Info("graceful.Run: server start running...", "addr", g.addr)
 		if err := g.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			g.l.Error("graceful.Run ListenAndServe failed", "err", err)
 		}
@@ -80,7 +82,7 @@ func (g *Graceful) Run() {
 	stop()
 
 	// Wait for requests currently being handling
-	ctx, cancel := context.WithTimeout(context.Background(), g.maxShutdownDuration)
+	ctx, cancel := context.WithTimeout(context.Background(), g.stopTimeout)
 	defer cancel()
 
 	if err := g.server.Shutdown(ctx); err != nil {
