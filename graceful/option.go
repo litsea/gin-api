@@ -33,9 +33,9 @@ func WithWriteTimeout(timeout time.Duration) Option {
 	}
 }
 
-func WithMaxShutdownDuration(dur time.Duration) Option {
+func WithStopTimeout(timeout time.Duration) Option {
 	return func(c *Graceful) {
-		c.maxShutdownDuration = dur
+		c.stopTimeout = timeout
 	}
 }
 
