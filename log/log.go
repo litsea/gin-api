@@ -131,7 +131,6 @@ func (l *DefaultLogger) logContext(ctx context.Context, lv slog.Level, msg strin
 		ctx = context.Background()
 	}
 	_ = l.sl.Handler().Handle(ctx, r)
-
 }
 
 func (l *DefaultLogger) DebugRequest(ctx *gin.Context, msg string, attrs map[string]any) {
