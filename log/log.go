@@ -3,8 +3,10 @@ package log
 import (
 	"context"
 	"log/slog"
+	"runtime"
 	"runtime/debug"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -114,11 +116,21 @@ func (l *DefaultLogger) Error(msg string, args ...any) {
 }
 
 func (l *DefaultLogger) logContext(ctx context.Context, lv slog.Level, msg string, args ...any) {
-	if !l.enable {
+	if !l.enable || !l.sl.Enabled(ctx, lv) {
 		return
 	}
 
-	l.sl.Log(ctx, lv, msg, args...)
+	// skip [runtime.Callers, this function, this function's caller]
+	skip := 3
+	var pcs [1]uintptr
+	runtime.Callers(skip, pcs[:])
+
+	r := slog.NewRecord(time.Now(), lv, msg, pcs[0])
+	r.Add(args...)
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	_ = l.sl.Handler().Handle(ctx, r)
 }
 
 func (l *DefaultLogger) DebugRequest(ctx *gin.Context, msg string, attrs map[string]any) {
@@ -240,7 +252,15 @@ func (l *DefaultLogger) logRequest(ctx *gin.Context, lv slog.Level, msg string, 
 		attributes = append(attributes, slog.Any("stacktrace", string(trace)))
 	}
 
-	l.sl.LogAttrs(ctx, lv, msg, attributes...)
+	// skip [runtime.Callers, this function, l.XXXRequest, l.XXXRequest's caller]
+	skip := 4
+	var pcs [1]uintptr
+	runtime.Callers(skip, pcs[:])
+
+	r := slog.NewRecord(time.Now(), lv, msg, pcs[0])
+	r.AddAttrs(attributes...)
+
+	_ = l.sl.Handler().Handle(ctx, r)
 }
 
 func DebugRequest(ctx *gin.Context, msg string, attrs map[string]any) {
