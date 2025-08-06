@@ -11,7 +11,7 @@ require (
 	github.com/go-pkgz/expirable-cache/v3 v3.0.0
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/google/uuid v1.6.0
-	github.com/litsea/gin-i18n v0.2.0
+	github.com/litsea/gin-i18n v0.2.1
 	github.com/litsea/i18n v0.2.1
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/text v0.27.0
