@@ -13,7 +13,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/litsea/gin-i18n v0.2.1
 	github.com/litsea/i18n v0.2.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	golang.org/x/text v0.27.0
 	golang.org/x/time v0.12.0
 )
