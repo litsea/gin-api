@@ -8,7 +8,7 @@ require (
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-contrib/pprof v1.5.3
 	github.com/gin-gonic/gin v1.10.1
-	github.com/go-pkgz/expirable-cache/v3 v3.0.0
+	github.com/go-pkgz/expirable-cache/v3 v3.1.0
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/google/uuid v1.6.0
 	github.com/litsea/gin-i18n v0.2.1
