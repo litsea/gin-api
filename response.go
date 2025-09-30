@@ -122,10 +122,12 @@ func Error(ctx *gin.Context, err error) {
 			// ignore log
 		default:
 			msgErr := fmt.Sprintf("API error: code=%d %s", code, ee.Error())
-			l.ErrorRequest(ctx, msgErr, map[string]any{
-				"status": httpCode,
-				"err":    err,
-			})
+			if !ee.IsErrorLogDisabled() {
+				l.ErrorRequest(ctx, msgErr, map[string]any{
+					"status": httpCode,
+					"err":    err,
+				})
+			}
 		}
 	case errors.As(err, &ve):
 		validateError(ctx, ve)

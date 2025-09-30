@@ -11,9 +11,10 @@ const (
 var _ error = (*Error)(nil)
 
 type Error struct {
-	Code     int `json:"code"`
-	httpCode int
-	Message  string `json:"msg"`
+	Code           int `json:"code"`
+	httpCode       int
+	Message        string `json:"msg"`
+	errLogDisabled bool
 }
 
 func New(code int, msg string, httpCode ...int) *Error {
@@ -32,6 +33,15 @@ func (e *Error) HTTPCode() int {
 
 func (e *Error) Error() string {
 	return e.Message
+}
+
+func (e *Error) DisableErrorLog(v bool) *Error {
+	e.errLogDisabled = v
+	return e
+}
+
+func (e *Error) IsErrorLogDisabled() bool {
+	return e.errLogDisabled
 }
 
 var (
@@ -55,5 +65,7 @@ var (
 
 	// server common error.
 
-	ErrServiceTimeout = New(1101, "ErrServiceTimeout", http.StatusServiceUnavailable)
+	// https://bugzilla.mozilla.org/show_bug.cgi?id=907800
+	// Do not use http.StatusRequestTimeout, as it may cause Firefox to automatically retry the request
+	ErrServiceTimeout = New(1101, "ErrServiceTimeout", http.StatusServiceUnavailable).DisableErrorLog(true)
 )
