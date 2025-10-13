@@ -14,7 +14,7 @@ require (
 	github.com/litsea/gin-i18n v0.2.2
 	github.com/litsea/i18n v0.2.2
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/text v0.29.0
+	golang.org/x/text v0.30.0
 	golang.org/x/time v0.13.0
 )
 
