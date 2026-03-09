@@ -1,6 +1,6 @@
 module github.com/litsea/gin-api
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/cdfmlr/ellipsis v0.0.1
@@ -15,7 +15,7 @@ require (
 	github.com/litsea/i18n v0.2.2
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/text v0.32.0
-	golang.org/x/time v0.14.0
+	golang.org/x/time v0.15.0
 )
 
 require (
